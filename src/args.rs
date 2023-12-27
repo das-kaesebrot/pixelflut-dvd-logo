@@ -1,0 +1,39 @@
+pub(crate) mod args {
+    pub use clap::Parser;
+
+    #[derive(Parser, Debug)]
+    #[command(author, version, about, long_about = None)]
+    pub struct PixelflutClientArgs {
+        // Host to use
+        #[arg(short = 'H', long)]
+        pub host: String,
+    
+        // Port to use
+        #[arg(short, long, default_value_t = 1337)]
+        pub port: u16,
+
+        // Resize width
+        #[arg(long, default_value_t = 350)]
+        pub resize_x: i16,
+
+        // Canvas width
+        #[arg(long, default_value_t = 1920)]
+        pub canvas_x: i16,
+
+        // Canvas height
+        #[arg(long, default_value_t = 1080)]
+        pub canvas_y: i16,
+
+        // drift x
+        #[arg(long, default_value_t = 12)]
+        pub drift_x: u16,
+
+        // drift y
+        #[arg(long, default_value_t = 9)]
+        pub drift_y: u16,
+
+        // Image to draw
+        #[arg(long)]
+        pub image_path: String,
+    }
+}
