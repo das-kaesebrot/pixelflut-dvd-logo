@@ -167,8 +167,8 @@ fn draw_image(
             continue;
         }
 
-        let x: i16 = pixel_x as i16 + offset.0 + image.height() as i16 / 2;
-        let y: i16 = pixel_y as i16 + offset.1 + image.width() as i16 / 2;
+        let x: i16 = pixel_x as i16 + offset.0 + (image.width() as i16 / 2);
+        let y: i16 = pixel_y as i16 + offset.1 + (image.height() as i16 / 2);
 
         // skip if we're outside of canvas bounds
         if x > canvas_size.0 as i16 {
@@ -187,7 +187,6 @@ fn draw_image(
             "PX {} {} {:02X}{:02X}{:02X}\n",
             x, y, rgb_values[0], rgb_values[1], rgb_values[2]
         );
-        // println!("Sending {command}");
         stream.write_all(command.as_bytes())?;
     }
     Ok(())
