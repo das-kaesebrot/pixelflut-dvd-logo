@@ -35,5 +35,9 @@ pub(crate) mod args {
         // Image to draw
         #[arg(long)]
         pub image_path: String,
+
+        // Rate to draw at in FPS
+        #[arg(long, default_value_t = 60)]
+        pub draw_rate: u16,
     }
 }

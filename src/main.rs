@@ -1,6 +1,6 @@
 use std::io::prelude::*;
 use std::net::TcpStream;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
 use args::args::PixelflutClientArgs;
 use clap::Parser;
@@ -20,6 +20,8 @@ fn main() -> std::io::Result<()> {
 
     let pixelflut_host = args.host;
     let pixelflut_port = args.port;
+
+    let draw_duration = Duration::from_secs_f64(1 as f64 / args.draw_rate as f64);
 
     let mut info_counter = 0;
 
@@ -87,6 +89,8 @@ fn main() -> std::io::Result<()> {
 
     // Draw the image on the Pixelflut canvas
     loop {
+        let start = Instant::now();
+
         // Every 1000 iterations, display some stats
         if info_counter > 1000 {
             log::info!("Offset: [{offset_x}, {offset_y}] - Drift: [{drift_x}, {drift_y}]");
@@ -114,17 +118,26 @@ fn main() -> std::io::Result<()> {
             bounce = false;
         }
 
+        let mut duration = Duration::ZERO;
+        while duration < draw_duration {
         draw_image(
-            &mut stream,
+                &mut streams,
             &im_rgb,
             (canvas_width, canvas_height),
             (offset_x, offset_y),
         )?;
 
+            duration = start.elapsed();
+        }
+
         offset_x += drift_x;
         offset_y += drift_y;
 
         info_counter += 1;
+
+        if duration > Duration::from_secs(1) {
+            log::warn!("Slow drawing ({:.2}s)", duration.as_secs_f32());
+        }
     }
 }
 
