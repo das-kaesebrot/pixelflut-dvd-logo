@@ -89,6 +89,7 @@ fn main() -> std::io::Result<()> {
     log::info!("Opened {} server connections", streams.len());
 
     change_color(&mut im_rgb);
+    add_stroke(&mut im_rgb, args.stroke);
 
     let mut bounce = false;
 
@@ -119,7 +120,7 @@ fn main() -> std::io::Result<()> {
 
         if bounce {
             change_color(&mut im_rgb);
-            add_stroke(&mut im_rgb, 5);
+            add_stroke(&mut im_rgb, args.stroke);
 
             drift_x = jitter_drift(&mut drift_x);
             drift_y = jitter_drift(&mut drift_y);
@@ -182,6 +183,10 @@ fn change_color(image: &mut RgbaImage) {
 }
 
 fn add_stroke(image: &mut RgbaImage, width: u32) {
+    if width <= 0 {
+        return;
+    }
+
     let img_clone = image.clone();
     for (x, y, pixel) in image.enumerate_pixels_mut() {
         // skip if pixel is not transparent
@@ -234,11 +239,11 @@ fn draw_image(
         let y: i16 = pixel_y as i16 + offset.1;
 
         // skip if we're outside of canvas bounds
-        if x + image.width() as i16 > canvas_size.0 as i16 {
+        if (x as i16) > canvas_size.0 as i16 {
             continue;
         }
 
-        if y + image.height() as i16 > canvas_size.1 as i16 {
+        if (y as i16) > canvas_size.1 as i16 {
             continue;
         }
 

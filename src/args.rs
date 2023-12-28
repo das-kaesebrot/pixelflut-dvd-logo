@@ -39,5 +39,9 @@ pub(crate) mod args {
         // Rate to draw at in FPS
         #[arg(long, default_value_t = 60)]
         pub draw_rate: u16,
+
+        // Stroke width
+        #[arg(long, default_value_t = 4)]
+        pub stroke: u32,
     }
 }
