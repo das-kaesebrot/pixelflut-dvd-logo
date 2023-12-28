@@ -90,12 +90,26 @@ fn main() -> std::io::Result<()> {
             info_counter = 0;
         }
 
-        if offset_x > canvas_width.try_into().unwrap() || offset_x < 0 {
+        if (offset_x + im_half_width) > canvas_width as i16 || (offset_x + im_half_width) < 0 {
             drift_x = -drift_x; // invert drift so that the image seems to bounce at the edge
+            change_color(&mut im_rgb);
+
+            drift_x = jitter_drift(&mut drift_x);
+            drift_y = jitter_drift(&mut drift_y);
+
+            log::info!("Detected bounce");
+            log::info!("Offset: [{offset_x}, {offset_y}] - Drift: [{drift_x}, {drift_y}]");
         }
 
-        if offset_y > canvas_height.try_into().unwrap() || offset_y < 0 {
+        if (offset_y + im_half_height) > canvas_height as i16 || (offset_y + im_half_height) < 0 {
             drift_y = -drift_y;
+            change_color(&mut im_rgb);
+
+            drift_x = jitter_drift(&mut drift_x);
+            drift_y = jitter_drift(&mut drift_y);
+
+            log::info!("Detected bounce");
+            log::info!("Offset: [{offset_x}, {offset_y}] - Drift: [{drift_x}, {drift_y}]");
         }
 
         draw_image(
@@ -109,6 +123,35 @@ fn main() -> std::io::Result<()> {
         offset_y += drift_y;
 
         info_counter += 1;
+    }
+}
+
+fn jitter_drift(drift: &mut i16) -> i16 {
+    let drift_rng = rand::thread_rng().gen_range(0..9);
+
+    if (drift_rng == 0) {
+        *drift += 1;
+    }
+
+    return *drift;
+}
+
+fn change_color(image: &mut RgbaImage) {
+    let color_r = rand::thread_rng().gen_range(0..255);
+    let color_g = rand::thread_rng().gen_range(0..255);
+    let color_b = rand::thread_rng().gen_range(0..255);
+
+    log::info!("Changing colors to [{color_r}, {color_g}, {color_b}]");
+
+    for (pixel) in image.pixels_mut() {
+        // starting to become transparent --> don't draw, skip pixel
+        if pixel.0[3] <= 240 {
+            continue;
+        }
+
+        pixel.0[0] = color_r;
+        pixel.0[1] = color_g;
+        pixel.0[2] = color_b;
     }
 }
 
