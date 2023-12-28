@@ -25,6 +25,8 @@ fn main() -> std::io::Result<()> {
 
     let mut info_counter = 0;
 
+    let mut streams: Vec<TcpStream> = Vec::new();
+
     let mut image_path = args.image_path;
     if image_path.is_empty() {
         image_path = "assets/image.png".to_owned();
@@ -36,7 +38,9 @@ fn main() -> std::io::Result<()> {
     let im = image::open(image_path).unwrap();
 
     // Connect to Pixelflut server
-    let mut stream = TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap();
+    streams.push(TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap());
+
+    let mut stream = &streams[0];
     stream.set_nodelay(true)?;
     stream
         .set_read_timeout(Some(Duration::from_secs(10)))
@@ -48,26 +52,24 @@ fn main() -> std::io::Result<()> {
     log::info!("Successfully connected to server! Getting canvas size.");
 
     stream.write_all(b"SIZE\n")?;
-    let mut size_buf:[u8; 1024] = [0; 1024];
-    let mut size_str = "";
-    let mut result: usize = 0;
-    result = stream.read(&mut size_buf)?;
+    let mut size_buf: [u8; 1024] = [0; 1024];
+    let result = stream.read(&mut size_buf)?;
 
     let size_str_result = std::str::from_utf8(&size_buf);
 
     log::info!("Read data '{}'", size_str_result.unwrap_or("Empty"));
     log::info!("Read: {result} byte");
 
-    size_str = size_str_result.unwrap();
+    let size_str = size_str_result.unwrap();
 
     let size_split: Vec<&str> = size_str.trim().split(char::is_whitespace).collect();
 
     let canvas_width: i16 = size_split.get(1).unwrap().parse::<i16>().unwrap();
     let canvas_height: i16 = size_split.get(2).unwrap().parse::<i16>().unwrap();
 
-    log::info!("Set canvas to: [{canvas_width}, {canvas_height}]");
+    log::info!("Set canvas to [{canvas_width}, {canvas_height}]");
 
-    let size = args.resize_x;
+    let size = args.resize;
 
     // start offset
     let mut offset_x: i16 = canvas_width / 2;
@@ -79,6 +81,12 @@ fn main() -> std::io::Result<()> {
         image::imageops::FilterType::Gaussian,
     );
     let mut im_rgb = im_resized.to_rgba8();
+
+    while streams.len() < size as usize {
+        streams.push(TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap());
+    }
+
+    log::info!("Opened {} server connections", streams.len());
 
     change_color(&mut im_rgb);
 
@@ -171,26 +179,28 @@ fn change_color(image: &mut RgbaImage) {
 }
 
 fn draw_image(
-    stream: &mut TcpStream,
+    stream: &mut Vec<TcpStream>,
     image: &RgbaImage,
     canvas_size: (i16, i16),
     offset: (i16, i16),
 ) -> std::io::Result<()> {
+    let mut conn_index = 0;
+
     for (pixel_x, pixel_y, rgb_values) in image.enumerate_pixels() {
         // starting to become transparent --> don't draw, skip pixel
         if rgb_values[3] <= 240 {
             continue;
         }
 
-        let x: i16 = pixel_x as i16 + offset.0 + (image.width() as i16 / 2);
-        let y: i16 = pixel_y as i16 + offset.1 + (image.height() as i16 / 2);
+        let x: i16 = pixel_x as i16 + offset.0;
+        let y: i16 = pixel_y as i16 + offset.1;
 
         // skip if we're outside of canvas bounds
-        if x > canvas_size.0 as i16 {
+        if x + image.width() as i16 > canvas_size.0 as i16 {
             continue;
         }
 
-        if y > canvas_size.1 as i16 {
+        if y + image.height() as i16 > canvas_size.1 as i16 {
             continue;
         }
 
@@ -202,7 +212,13 @@ fn draw_image(
             "PX {} {} {:02X}{:02X}{:02X}\n",
             x, y, rgb_values[0], rgb_values[1], rgb_values[2]
         );
-        stream.write_all(command.as_bytes())?;
+        stream[conn_index].write_all(command.as_bytes())?;
+
+        conn_index += 1;
+        if conn_index >= stream.len() {
+            conn_index = 0;
+        }
     }
+
     Ok(())
 }
