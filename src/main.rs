@@ -119,6 +119,7 @@ fn main() -> std::io::Result<()> {
 
         if bounce {
             change_color(&mut im_rgb);
+            add_stroke(&mut im_rgb, 5);
 
             drift_x = jitter_drift(&mut drift_x);
             drift_y = jitter_drift(&mut drift_y);
@@ -178,6 +179,41 @@ fn change_color(image: &mut RgbaImage) {
         pixel.0[1] = color_g;
         pixel.0[2] = color_b;
     }
+}
+
+fn add_stroke(image: &mut RgbaImage, width: u32) {
+    let img_clone = image.clone();
+    for (x, y, pixel) in image.enumerate_pixels_mut() {
+        // skip if pixel is not transparent
+        if pixel.0[3] < 240 {
+            continue;
+        }
+
+        let mut set_black: bool = false;
+
+        for neighbor_offset in 0..width {
+            set_black = pixel_is_transparent(x - neighbor_offset, y, &img_clone)
+                || pixel_is_transparent(x + neighbor_offset, y, &img_clone)
+                || pixel_is_transparent(x, y - neighbor_offset, &img_clone)
+                || pixel_is_transparent(x, y + neighbor_offset, &img_clone);
+        }
+
+        if set_black {
+            pixel.0[0] = 0;
+            pixel.0[1] = 0;
+            pixel.0[2] = 0;
+        }
+    }
+}
+
+fn pixel_is_transparent(x: u32, y: u32, image: &RgbaImage) -> bool {
+    let pixel: Option<&image::Rgba<u8>> = image.get_pixel_checked(x, y);
+    if pixel.is_some() {
+        if pixel.unwrap().0[3] < 240 {
+            return true;
+        }
+    }
+    return false;
 }
 
 fn draw_image(
