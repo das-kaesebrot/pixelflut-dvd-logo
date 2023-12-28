@@ -14,7 +14,7 @@ pub(crate) mod args {
 
         // Resize width
         #[arg(long, default_value_t = 350)]
-        pub resize_x: i16,
+        pub resize: i16,
 
         // Canvas width
         #[arg(long, default_value_t = 1920)]

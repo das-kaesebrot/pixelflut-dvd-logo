@@ -131,12 +131,12 @@ fn main() -> std::io::Result<()> {
 
         let mut duration = Duration::ZERO;
         while duration < draw_duration {
-        draw_image(
+            draw_image(
                 &mut streams,
-            &im_rgb,
-            (canvas_width, canvas_height),
-            (offset_x, offset_y),
-        )?;
+                &im_rgb,
+                (canvas_width, canvas_height),
+                (offset_x, offset_y),
+            )?;
 
             duration = start.elapsed();
         }
@@ -155,7 +155,7 @@ fn main() -> std::io::Result<()> {
 fn jitter_drift(drift: &mut i16) -> i16 {
     let drift_rng = rand::thread_rng().gen_range(0..9);
 
-    if (drift_rng == 0) {
+    if drift_rng == 0 {
         *drift += 1;
     }
 
@@ -169,7 +169,7 @@ fn change_color(image: &mut RgbaImage) {
 
     log::info!("Changing colors to [{color_r}, {color_g}, {color_b}]");
 
-    for (pixel) in image.pixels_mut() {
+    for pixel in image.pixels_mut() {
         // starting to become transparent --> don't draw, skip pixel
         if pixel.0[3] <= 240 {
             continue;
