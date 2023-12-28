@@ -14,15 +14,6 @@ fn main() -> std::io::Result<()> {
 
     let args = PixelflutClientArgs::parse();
 
-    let canvas_width: i16 = args.canvas_x;
-    let canvas_height: i16 = args.canvas_y;
-
-    let size = args.resize_x;
-
-    // start offset
-    let mut offset_x: i16 = 960;
-    let mut offset_y: i16 = 540;
-
     let mut drift_x: i16 = args.drift_x as i16;
     let mut drift_y: i16 = args.drift_y as i16;
 
@@ -40,24 +31,56 @@ fn main() -> std::io::Result<()> {
     log::info!("Using image from path '{image_path}'");
 
     let im = image::open(image_path).unwrap();
+
+    // Connect to Pixelflut server
+    let mut stream = TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap();
+    stream.set_nodelay(true)?;
+    stream
+        .set_read_timeout(Some(Duration::from_secs(10)))
+        .unwrap();
+    stream
+        .set_write_timeout(Some(Duration::from_secs(10)))
+        .unwrap();
+
+    log::info!("Successfully connected to server! Getting canvas size.");
+
+    stream.write_all(b"SIZE\n")?;
+    let mut size_buf:[u8; 1024] = [0; 1024];
+    let mut size_str = "";
+    let mut result: usize = 0;
+    result = stream.read(&mut size_buf)?;
+
+    let size_str_result = std::str::from_utf8(&size_buf);
+
+    log::info!("Read data '{}'", size_str_result.unwrap_or("Empty"));
+    log::info!("Read: {result} byte");
+
+    size_str = size_str_result.unwrap();
+
+    let size_split: Vec<&str> = size_str.trim().split(char::is_whitespace).collect();
+
+    let canvas_width: i16 = size_split.get(1).unwrap().parse::<i16>().unwrap();
+    let canvas_height: i16 = size_split.get(2).unwrap().parse::<i16>().unwrap();
+
+    log::info!("Set canvas to: [{canvas_width}, {canvas_height}]");
+
+    let size = args.resize_x;
+
+    // start offset
+    let mut offset_x: i16 = canvas_width / 2;
+    let mut offset_y: i16 = canvas_height / 2;
+
     let im_resized = im.resize(
         size as u32,
         size as u32,
         image::imageops::FilterType::Gaussian,
     );
-    let im_rgb = im_resized.to_rgba8();
+    let mut im_rgb = im_resized.to_rgba8();
 
-    // Connect to Pixelflut server
-    let mut stream = TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap();
-    let mut _discard = Vec::new();
-    stream.set_nodelay(true)?;
-    stream.set_nonblocking(true)?;
-    stream
-        .set_read_timeout(Some(Duration::from_secs(5)))
-        .unwrap();
-    stream.peek(&mut _discard)?;
+    change_color(&mut im_rgb);
 
-    log::info!("Successfully connected to server!");
+    let im_half_width = im_rgb.width() as i16 / 2;
+    let im_half_height = im_rgb.height() as i16 / 2;
 
     // Draw the image on the Pixelflut canvas
     loop {
