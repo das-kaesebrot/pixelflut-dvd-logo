@@ -85,7 +85,7 @@ fn main() -> std::io::Result<()> {
     // Draw the image on the Pixelflut canvas
     loop {
         // Every 1000 iterations, display some stats
-        if info_counter > 10000 {
+        if info_counter > 1000 {
             log::info!("Offset: [{offset_x}, {offset_y}] - Drift: [{drift_x}, {drift_y}]");
             info_counter = 0;
         }
