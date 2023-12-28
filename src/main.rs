@@ -5,6 +5,7 @@ use std::time::Duration;
 use args::args::PixelflutClientArgs;
 use clap::Parser;
 use image::RgbaImage;
+use rand::Rng;
 use simple_logger::SimpleLogger;
 
 mod args;

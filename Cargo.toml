@@ -10,3 +10,4 @@ image = "0.24.7"
 log = { version = "^0.4.17", features = ["std"] }
 simple_logger = "4.2.0"
 clap = { version = "4.4.8", features = ["derive"] }
+rand = "0.8.5"
