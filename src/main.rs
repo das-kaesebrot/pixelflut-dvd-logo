@@ -83,6 +83,8 @@ fn main() -> std::io::Result<()> {
     let im_half_width = im_rgb.width() as i16 / 2;
     let im_half_height = im_rgb.height() as i16 / 2;
 
+    let mut bounce = false;
+
     // Draw the image on the Pixelflut canvas
     loop {
         // Every 1000 iterations, display some stats
@@ -93,17 +95,15 @@ fn main() -> std::io::Result<()> {
 
         if (offset_x + im_half_width) > canvas_width as i16 || (offset_x + im_half_width) < 0 {
             drift_x = -drift_x; // invert drift so that the image seems to bounce at the edge
-            change_color(&mut im_rgb);
-
-            drift_x = jitter_drift(&mut drift_x);
-            drift_y = jitter_drift(&mut drift_y);
-
-            log::info!("Detected bounce");
-            log::info!("Offset: [{offset_x}, {offset_y}] - Drift: [{drift_x}, {drift_y}]");
+            bounce = true;
         }
 
         if (offset_y + im_half_height) > canvas_height as i16 || (offset_y + im_half_height) < 0 {
             drift_y = -drift_y;
+            bounce = true;
+        }
+
+        if bounce {
             change_color(&mut im_rgb);
 
             drift_x = jitter_drift(&mut drift_x);
@@ -111,6 +111,7 @@ fn main() -> std::io::Result<()> {
 
             log::info!("Detected bounce");
             log::info!("Offset: [{offset_x}, {offset_y}] - Drift: [{drift_x}, {drift_y}]");
+            bounce = false;
         }
 
         draw_image(
