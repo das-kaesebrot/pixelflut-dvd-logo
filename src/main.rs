@@ -90,9 +90,6 @@ fn main() -> std::io::Result<()> {
 
     change_color(&mut im_rgb);
 
-    let im_half_width = im_rgb.width() as i16 / 2;
-    let im_half_height = im_rgb.height() as i16 / 2;
-
     let mut bounce = false;
 
     // Draw the image on the Pixelflut canvas
@@ -105,12 +102,17 @@ fn main() -> std::io::Result<()> {
             info_counter = 0;
         }
 
-        if (offset_x + im_half_width) > canvas_width as i16 || (offset_x + im_half_width) < 0 {
+        let bound_left = offset_x;
+        let bound_right = offset_x + im_rgb.width() as i16;
+        let bound_upper = offset_y;
+        let bound_lower = offset_y + im_rgb.height() as i16;
+
+        if bound_left < 0 || bound_right > canvas_width as i16 {
             drift_x = -drift_x; // invert drift so that the image seems to bounce at the edge
             bounce = true;
         }
 
-        if (offset_y + im_half_height) > canvas_height as i16 || (offset_y + im_half_height) < 0 {
+        if bound_upper < 0 || bound_lower > canvas_height {
             drift_y = -drift_y;
             bounce = true;
         }
