@@ -105,7 +105,15 @@ fn main() -> std::io::Result<()> {
     let mut im_rgb = im_resized.to_rgba8();
 
     while streams.len() < size as usize {
-        streams.push(TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap());
+        let stream = TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap();
+        stream.set_nonblocking(true)?;
+        stream
+            .set_read_timeout(Some(Duration::from_secs(10)))
+            .unwrap();
+        stream
+            .set_write_timeout(Some(Duration::from_secs(10)))
+            .unwrap();
+        streams.push(stream);
     }
 
     log::info!("Opened {} server connections", streams.len());
