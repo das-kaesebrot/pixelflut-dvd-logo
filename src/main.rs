@@ -143,7 +143,7 @@ fn main() -> std::io::Result<()> {
     add_stroke(&mut im_rgb, args.stroke);
 
     let mut bounce = false;
-    let mut field_to_draw = 0;
+    let mut field_to_draw = 1;
     let fields = args.fields as i16;
 
     // Draw the image on the Pixelflut canvas
@@ -197,7 +197,7 @@ fn main() -> std::io::Result<()> {
 
             field_to_draw += 1;
             if field_to_draw >= fields {
-                field_to_draw = 0;
+                field_to_draw = 1;
             }
 
             duration = start.elapsed();
