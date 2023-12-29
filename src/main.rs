@@ -76,10 +76,13 @@ fn main() -> std::io::Result<()> {
     let result = query_stream.read(&mut size_buf)?;
 
     let size_str_result = std::str::from_utf8(&size_buf);
-    
+
     query_stream.shutdown(std::net::Shutdown::Both)?;
 
-    log::info!("Read data '{}' ({result} byte)", size_str_result.unwrap_or("Empty").trim());
+    log::info!(
+        "Read data '{}' ({result} byte)",
+        size_str_result.unwrap_or("Empty").trim()
+    );
 
     let size_str = size_str_result.unwrap();
 
@@ -92,7 +95,7 @@ fn main() -> std::io::Result<()> {
 
     let size;
 
-    if (args.conns.is_some()) {
+    if args.conns.is_some() {
         size = args.conns.unwrap();
     } else {
         size = args.resize as u32;
@@ -107,7 +110,8 @@ fn main() -> std::io::Result<()> {
 
     // start offset
     let mut offset_x: i16 = rand::thread_rng().gen_range(0..(canvas_width - im_rgb.width() as i16));
-    let mut offset_y: i16 = rand::thread_rng().gen_range(0..(canvas_height - im_rgb.height() as i16));
+    let mut offset_y: i16 =
+        rand::thread_rng().gen_range(0..(canvas_height - im_rgb.height() as i16));
 
     log::info!("Start offset [{offset_x}, {offset_y}]");
 
