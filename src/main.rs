@@ -119,7 +119,12 @@ fn main() -> std::io::Result<()> {
         if result.is_err() {
             failed_conns += 1;
 
-            log::error!("Couldn't open connection {} - Failed connections {}/{}", streams.len(), failed_conns, max_failed_conns);
+            log::error!(
+                "Couldn't open connection {} - Failed connections {}/{}",
+                streams.len(),
+                failed_conns,
+                max_failed_conns
+            );
 
             if failed_conns >= max_failed_conns {
                 break;
@@ -194,7 +199,7 @@ fn main() -> std::io::Result<()> {
                 &im_rgb,
                 (canvas_width, canvas_height),
                 (offset_x, offset_y),
-                field_to_draw
+                field_to_draw,
             )?;
 
             field_to_draw += 1;
@@ -264,17 +269,17 @@ fn add_stroke(image: &mut RgbaImage, width: u32) {
                 || pixel_is_transparent(x + neighbor_offset, y, &img_clone)
                 || pixel_is_transparent(x, y - neighbor_offset, &img_clone)
                 || pixel_is_transparent(x, y + neighbor_offset, &img_clone);
-            }
+        }
 
-            if set_black {
+        if set_black {
             pixel.0[0] = 0;
             pixel.0[1] = 0;
             pixel.0[2] = 0;
         }
-        }
     }
+}
 
-    fn pixel_is_transparent(x: u32, y: u32, image: &RgbaImage) -> bool {
+fn pixel_is_transparent(x: u32, y: u32, image: &RgbaImage) -> bool {
     let pixel: Option<&image::Rgba<u8>> = image.get_pixel_checked(x, y);
     if pixel.is_some() {
         if pixel.unwrap().0[3] < 240 {
@@ -293,12 +298,11 @@ fn draw_image(
     image: &RgbaImage,
     canvas_size: (i16, i16),
     offset: (i16, i16),
-    field_to_draw: i16
+    field_to_draw: i16,
 ) -> std::io::Result<()> {
     let mut conn_index = 0;
 
     for (pixel_x, pixel_y, rgb_values) in image.enumerate_pixels() {
-
         // starting to become transparent --> don't draw, skip pixel
         if rgb_values[3] <= 240 {
             continue;
