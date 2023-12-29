@@ -91,7 +91,13 @@ fn main() -> std::io::Result<()> {
 
     log::info!("Set canvas to [{canvas_width}, {canvas_height}]");
 
-    let size = args.resize;
+    let size;
+
+    if (args.conns.is_some()) {
+        size = args.conns.unwrap();
+    } else {
+        size = args.resize as u32;
+    }
 
     // start offset
     let mut offset_x: i16 = canvas_width / 2;

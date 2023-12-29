@@ -39,5 +39,10 @@ pub(crate) mod args {
         // Stroke width
         #[arg(long, default_value_t = false)]
         pub jitter: bool,
+
+        // Amount of connections to open
+        #[arg(long)]
+        pub conns: Option<u32>,
+
     }
 }
