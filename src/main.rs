@@ -60,27 +60,26 @@ fn main() -> std::io::Result<()> {
     log::info!("Using image from path '{image_path}'");
 
     // Connect to Pixelflut server
-    streams.push(TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap());
-
-    let mut stream = &streams[0];
-    stream.set_nodelay(true)?;
-    stream
+    let mut query_stream =
+        TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap();
+    query_stream
         .set_read_timeout(Some(Duration::from_secs(10)))
         .unwrap();
-    stream
+    query_stream
         .set_write_timeout(Some(Duration::from_secs(10)))
         .unwrap();
 
     log::info!("Successfully connected to server! Getting canvas size.");
 
-    stream.write_all(b"SIZE\n")?;
+    query_stream.write_all(b"SIZE\n")?;
     let mut size_buf: [u8; 1024] = [0; 1024];
-    let result = stream.read(&mut size_buf)?;
+    let result = query_stream.read(&mut size_buf)?;
 
     let size_str_result = std::str::from_utf8(&size_buf);
+    
+    query_stream.shutdown(std::net::Shutdown::Both)?;
 
-    log::info!("Read data '{}'", size_str_result.unwrap_or("Empty"));
-    log::info!("Read: {result} byte");
+    log::info!("Read data '{}' ({result} byte)", size_str_result.unwrap_or("Empty").trim());
 
     let size_str = size_str_result.unwrap();
 
