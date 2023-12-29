@@ -193,6 +193,8 @@ fn main() -> std::io::Result<()> {
                 (canvas_width, canvas_height),
                 (offset_x, offset_y),
                 field_to_draw,
+                pixelflut_host.clone(),
+                pixelflut_port,
             )?;
 
             field_to_draw += 1;
@@ -310,6 +312,8 @@ fn draw_image(
     canvas_size: (i16, i16),
     offset: (i16, i16),
     field_to_draw: i16,
+    host: String,
+    port: u16,
 ) -> std::io::Result<()> {
     let mut conn_index = 0;
 
@@ -344,11 +348,21 @@ fn draw_image(
             "PX {} {} {:02X}{:02X}{:02X}\n",
             x, y, rgb_values[0], rgb_values[1], rgb_values[2]
         );
-        stream[conn_index].write_all(command.as_bytes())?;
 
-        conn_index += 1;
-        if conn_index >= stream.len() {
-            conn_index = 0;
+        let result = stream[conn_index].write_all(command.as_bytes());
+
+        if result.is_err() {
+            log::warn!("Encountered an error while drawing pixel at [{x}, {y}], recreating stream");
+            stream[conn_index] = create_stream(host.clone(), port).unwrap();
+        }
+
+        log::debug!("Conn index {conn_index}");
+
+        if stream.len() > 1 {
+            conn_index += 1;
+            if conn_index > stream.len() - 1 {
+                conn_index = 0;
+            }
         }
     }
 
