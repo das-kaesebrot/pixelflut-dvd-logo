@@ -98,16 +98,18 @@ fn main() -> std::io::Result<()> {
         size = args.resize as u32;
     }
 
-    // start offset
-    let mut offset_x: i16 = canvas_width / 2;
-    let mut offset_y: i16 = canvas_height / 2;
-
     let im_resized = im.resize(
         args.resize as u32,
         args.resize as u32,
         image::imageops::FilterType::Gaussian,
     );
     let mut im_rgb = im_resized.to_rgba8();
+
+    // start offset
+    let mut offset_x: i16 = rand::thread_rng().gen_range(0..(canvas_width - im_rgb.width() as i16));
+    let mut offset_y: i16 = rand::thread_rng().gen_range(0..(canvas_height - im_rgb.height() as i16));
+
+    log::info!("Start offset [{offset_x}, {offset_y}]");
 
     let mut failed_conns = 0;
     let max_failed_conns = 5;
