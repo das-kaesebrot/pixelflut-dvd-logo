@@ -103,8 +103,8 @@ fn main() -> std::io::Result<()> {
     let mut offset_y: i16 = canvas_height / 2;
 
     let im_resized = im.resize(
-        size as u32,
-        size as u32,
+        args.resize as u32,
+        args.resize as u32,
         image::imageops::FilterType::Gaussian,
     );
     let mut im_rgb = im_resized.to_rgba8();
