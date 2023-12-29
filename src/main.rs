@@ -318,13 +318,20 @@ fn draw_image(
     let mut conn_index = 0;
 
     for (pixel_x, pixel_y, rgb_values) in image.enumerate_pixels() {
-        // starting to become transparent --> don't draw, skip pixel
-        if rgb_values[3] <= 240 {
-            continue;
-        }
-
         let x: i16 = pixel_x as i16 + offset.0;
         let y: i16 = pixel_y as i16 + offset.1;
+
+        // starting to become transparent --> don't draw, skip pixel
+        if rgb_values[3] <= 240 {
+            log::debug!(
+                "Skip [{x}, {y}] because of transparency [{}, {}, {}, {}]",
+                rgb_values.0[0],
+                rgb_values.0[1],
+                rgb_values.0[2],
+                rgb_values.0[3]
+            );
+            continue;
+        }
 
         // only draw every n rows/columns
         if x % field_to_draw != 0 || y % field_to_draw != 0 {
