@@ -122,8 +122,10 @@ fn main() -> std::io::Result<()> {
             change_color(&mut im_rgb);
             add_stroke(&mut im_rgb, args.stroke);
 
+            if args.jitter {
             drift_x = jitter_drift(&mut drift_x);
             drift_y = jitter_drift(&mut drift_y);
+            }
 
             log::info!("Detected bounce");
             log::info!("Offset: [{offset_x}, {offset_y}] - Drift: [{drift_x}, {drift_y}]");

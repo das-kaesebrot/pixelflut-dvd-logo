@@ -43,5 +43,9 @@ pub(crate) mod args {
         // Stroke width
         #[arg(long, default_value_t = 4)]
         pub stroke: u32,
+
+        // Stroke width
+        #[arg(long, default_value_t = false)]
+        pub jitter: bool,
     }
 }
