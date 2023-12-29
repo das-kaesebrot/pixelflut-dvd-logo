@@ -14,7 +14,7 @@ use simple_logger::SimpleLogger;
 mod args;
 
 fn main() -> std::io::Result<()> {
-    SimpleLogger::new().init().unwrap();
+    SimpleLogger::new().env().init().unwrap();
 
     let args = PixelflutClientArgs::parse();
 
