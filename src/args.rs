@@ -44,5 +44,8 @@ pub(crate) mod args {
         #[arg(long)]
         pub conns: Option<u32>,
 
+        // Fields to draw with
+        #[arg(long, default_value_t = 2)]
+        pub fields: u32,
     }
 }

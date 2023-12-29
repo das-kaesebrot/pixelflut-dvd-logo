@@ -145,6 +145,8 @@ fn main() -> std::io::Result<()> {
     add_stroke(&mut im_rgb, args.stroke);
 
     let mut bounce = false;
+    let mut field_to_draw = 0;
+    let fields = args.fields as i16;
 
     // Draw the image on the Pixelflut canvas
     loop {
@@ -192,7 +194,13 @@ fn main() -> std::io::Result<()> {
                 &im_rgb,
                 (canvas_width, canvas_height),
                 (offset_x, offset_y),
+                field_to_draw
             )?;
+
+            field_to_draw += 1;
+            if field_to_draw >= fields {
+                field_to_draw = 0;
+            }
 
             duration = start.elapsed();
         }
@@ -285,10 +293,12 @@ fn draw_image(
     image: &RgbaImage,
     canvas_size: (i16, i16),
     offset: (i16, i16),
+    field_to_draw: i16
 ) -> std::io::Result<()> {
     let mut conn_index = 0;
 
     for (pixel_x, pixel_y, rgb_values) in image.enumerate_pixels() {
+
         // starting to become transparent --> don't draw, skip pixel
         if rgb_values[3] <= 240 {
             continue;
@@ -296,6 +306,11 @@ fn draw_image(
 
         let x: i16 = pixel_x as i16 + offset.0;
         let y: i16 = pixel_y as i16 + offset.1;
+
+        // only draw every n rows/columns
+        if x % field_to_draw != 0 || y % field_to_draw != 0 {
+            continue;
+        }
 
         // skip if we're outside of canvas bounds
         if (x as i16) > canvas_size.0 as i16 {
