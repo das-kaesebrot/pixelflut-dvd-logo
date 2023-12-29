@@ -1,11 +1,14 @@
+use std::fs;
 use std::io::prelude::*;
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
 
 use args::args::PixelflutClientArgs;
 use clap::Parser;
-use image::RgbaImage;
+use image::{DynamicImage, RgbaImage};
 use rand::Rng;
+use resvg::tiny_skia::Pixmap;
+use resvg::usvg::{self, Transform, TreeParsing};
 use simple_logger::SimpleLogger;
 
 mod args;
@@ -32,10 +35,29 @@ fn main() -> std::io::Result<()> {
         image_path = "assets/image.png".to_owned();
     }
 
+    let im: DynamicImage; // unused values
+
+    if image_path.ends_with(".svg") {
+        let svg_content = fs::read_to_string(image_path.clone())?;
+        let tree = usvg::Tree::from_str(&svg_content, &usvg::Options::default()).unwrap();
+        let resvg_tree = resvg::Tree::from_usvg(&tree);
+
+        let mut pixmap = Pixmap::new(
+            tree.size.to_int_size().width(),
+            tree.size.to_int_size().height(),
+        )
+        .unwrap();
+
+        let mut pixmap_mut = pixmap.as_mut();
+        resvg_tree.render(Transform::default(), &mut pixmap_mut);
+        let encoded_data = pixmap_mut.to_owned().encode_png().unwrap();
+        im = image::load_from_memory(&encoded_data).unwrap();
+    } else {
+        im = image::open(image_path.clone()).unwrap();
+    }
+
     log::info!("Connecting to '{pixelflut_host}:{pixelflut_port}'");
     log::info!("Using image from path '{image_path}'");
-
-    let im = image::open(image_path).unwrap();
 
     // Connect to Pixelflut server
     streams.push(TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap());
@@ -123,8 +145,8 @@ fn main() -> std::io::Result<()> {
             add_stroke(&mut im_rgb, args.stroke);
 
             if args.jitter {
-            drift_x = jitter_drift(&mut drift_x);
-            drift_y = jitter_drift(&mut drift_y);
+                drift_x = jitter_drift(&mut drift_x);
+                drift_y = jitter_drift(&mut drift_y);
             }
 
             log::info!("Detected bounce");
@@ -203,17 +225,17 @@ fn add_stroke(image: &mut RgbaImage, width: u32) {
                 || pixel_is_transparent(x + neighbor_offset, y, &img_clone)
                 || pixel_is_transparent(x, y - neighbor_offset, &img_clone)
                 || pixel_is_transparent(x, y + neighbor_offset, &img_clone);
-        }
+            }
 
-        if set_black {
+            if set_black {
             pixel.0[0] = 0;
             pixel.0[1] = 0;
             pixel.0[2] = 0;
         }
+        }
     }
-}
 
-fn pixel_is_transparent(x: u32, y: u32, image: &RgbaImage) -> bool {
+    fn pixel_is_transparent(x: u32, y: u32, image: &RgbaImage) -> bool {
     let pixel: Option<&image::Rgba<u8>> = image.get_pixel_checked(x, y);
     if pixel.is_some() {
         if pixel.unwrap().0[3] < 240 {
