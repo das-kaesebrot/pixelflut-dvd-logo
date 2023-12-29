@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::prelude::*;
+use std::io::{prelude::*, Error};
 use std::net::TcpStream;
 use std::time::{Duration, Instant};
 
@@ -115,7 +115,7 @@ fn main() -> std::io::Result<()> {
     let max_failed_conns = 5;
 
     while streams.len() < size as usize {
-        let result = TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone()));
+        let result = create_stream(pixelflut_host.clone(), pixelflut_port);
 
         if result.is_err() {
             failed_conns += 1;
@@ -134,15 +134,7 @@ fn main() -> std::io::Result<()> {
             continue;
         }
 
-        let stream = result.unwrap();
-        stream.set_nonblocking(true)?;
-        stream
-            .set_read_timeout(Some(Duration::from_secs(10)))
-            .unwrap();
-        stream
-            .set_write_timeout(Some(Duration::from_secs(10)))
-            .unwrap();
-        streams.push(stream);
+        streams.push(result.unwrap());
     }
 
     log::info!("Opened {} server connections", streams.len());
@@ -292,6 +284,24 @@ fn pixel_is_transparent(x: u32, y: u32, image: &RgbaImage) -> bool {
     // also return true if we're out of bounds
     // --> since this method is only called on neighbouring pixels of anything that's not transparent, we should also draw a stroke here
     return true;
+}
+
+fn create_stream(host: String, port: u16) -> Result<TcpStream, Error> {
+    let result = TcpStream::connect((host, port));
+
+    if result.is_err() {
+        return result;
+    }
+
+    let stream = result.unwrap();
+    //stream.set_nonblocking(true)?;
+    stream
+        .set_read_timeout(Some(Duration::from_secs(10)))
+        .unwrap();
+    stream
+        .set_write_timeout(Some(Duration::from_secs(10)))
+        .unwrap();
+    Ok(stream)
 }
 
 fn draw_image(
