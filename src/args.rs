@@ -16,14 +16,6 @@ pub(crate) mod args {
         #[arg(long, default_value_t = 350)]
         pub resize: i16,
 
-        // Canvas width
-        #[arg(long, default_value_t = 1920)]
-        pub canvas_x: i16,
-
-        // Canvas height
-        #[arg(long, default_value_t = 1080)]
-        pub canvas_y: i16,
-
         // drift x
         #[arg(long, default_value_t = 12)]
         pub drift_x: u16,
