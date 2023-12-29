@@ -110,8 +110,25 @@ fn main() -> std::io::Result<()> {
     );
     let mut im_rgb = im_resized.to_rgba8();
 
+    let mut failed_conns = 0;
+    let max_failed_conns = 5;
+
     while streams.len() < size as usize {
-        let stream = TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone())).unwrap();
+        let result = TcpStream::connect((pixelflut_host.clone(), pixelflut_port.clone()));
+
+        if result.is_err() {
+            failed_conns += 1;
+
+            log::error!("Couldn't open connection {} - Failed connections {}/{}", streams.len(), failed_conns, max_failed_conns);
+
+            if failed_conns >= max_failed_conns {
+                break;
+            }
+
+            continue;
+        }
+
+        let stream = result.unwrap();
         stream.set_nonblocking(true)?;
         stream
             .set_read_timeout(Some(Duration::from_secs(10)))
