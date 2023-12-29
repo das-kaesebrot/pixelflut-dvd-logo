@@ -241,8 +241,12 @@ fn add_stroke(image: &mut RgbaImage, width: u32) {
         if pixel.unwrap().0[3] < 240 {
             return true;
         }
+        return false;
     }
-    return false;
+
+    // also return true if we're out of bounds
+    // --> since this method is only called on neighbouring pixels of anything that's not transparent, we should also draw a stroke here
+    return true;
 }
 
 fn draw_image(
